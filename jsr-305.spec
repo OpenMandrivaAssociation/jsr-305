@@ -51,6 +51,7 @@ BuildRequires:  ant
 BuildRequires:  java-devel
 BuildRequires:  java-javadoc
 BuildRequires:  jpackage-utils
+BuildRequires:  java-rpmbuild
 %if %{gcj_support}
 BuildRequires:  java-gcj-compat-devel
 %else
