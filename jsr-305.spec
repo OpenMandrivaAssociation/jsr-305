@@ -34,7 +34,7 @@
 
 Name:           jsr-305
 Version:        0.1
-Release:        %mkrel 1.0.1
+Release:        %mkrel 1.0.2
 Epoch:          0
 Summary:        JSR 305: Annotations for Software Defect Detection in Java
 # http://groups.google.com/group/jsr-305/browse_thread/thread/8105869a258c8c4f
