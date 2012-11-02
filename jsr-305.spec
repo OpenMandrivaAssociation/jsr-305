@@ -1,5 +1,5 @@
 Name:           jsr-305
-Version:        0.4
+Version:        0.5
 Release:        0.6.20090319svn
 Summary:        Correctness annotations for Java code
 
@@ -14,7 +14,7 @@ URL:            http://jsr-305.googlecode.com/
 #   xz jsr-305-0.4.20090319.tar
 Source0:        jsr-305-0.4.20090319.tar.xz
 
-BuildRequires:  java-1.6.0-openjdk-devel
+BuildRequires:  java-1.7.0-openjdk-devel
 BuildRequires:  jpackage-utils, maven2
 BuildRequires:  maven-compiler-plugin
 BuildRequires:  maven-install-plugin
