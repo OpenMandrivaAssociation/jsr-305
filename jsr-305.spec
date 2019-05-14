@@ -1,6 +1,6 @@
 Name:           jsr-305
 Version:        3.0.2
-Release:        1
+Release:        2
 Summary:        Correctness annotations for Java code
 # The majority of code is BSD-licensed, but some Java sources
 # are licensed under CC-BY license, see: $ grep -r Creative .
@@ -30,25 +30,29 @@ This package contains the API documentation for %{name}.
 . %{_sysconfdir}/profile.d/90java.sh
 export PATH=$JAVA_HOME/bin:$PATH
 
-cat >module-info.java <<'EOF'
-module javax.annotation {
-        exports javax.annotation;
-}
-EOF
+echo 'module javax.annotation {' >module-info.java
+find . -name "*.java" |xargs grep ^package |sed -e 's,^.*package ,,;s,\;.*,,' |sort |uniq |while read e; do
+	echo "	exports $e;" >>module-info.java
+done
+echo '}' >>module-info.java
 find . -name "*.java" |xargs javac
 find . -name "*.class" -o -name "*.properties" |xargs jar cf javax.annotation-%{version}.jar
+jar i javax.annotation-%{version}.jar
 javadoc -d docs -sourcepath . javax.annotation
 cp %{S:1} .
 
 %install
-mkdir -p %{buildroot}%{_javadir} %{buildroot}%{_mavenpomdir} %{buildroot}%{_javadocdir}
-cp javax.annotation-%{version}.jar %{buildroot}%{_javadir}
+mkdir -p %{buildroot}%{_javadir}/modules %{buildroot}%{_mavenpomdir} %{buildroot}%{_javadocdir}
+cp javax.annotation-%{version}.jar %{buildroot}%{_javadir}/modules
+ln -s modules/javax.annotation-%{version}.jar %{buildroot}%{_javadir}/
+ln -s modules/javax.annotation-%{version}.jar %{buildroot}%{_javadir}/javax.annotation.jar
 cp *.pom %{buildroot}%{_mavenpomdir}/
 %add_maven_depmap jsr305-%{version}.pom javax.annotation-%{version}.jar
 cp -a docs %{buildroot}%{_javadocdir}/%{name}
 
 %files -f .mfiles
-%{_javadir}/javax.annotation-%{version}.jar
+%{_javadir}/*.jar
+%{_javadir}/modules/javax.annotation-%{version}.jar
 
 %files javadoc
 %{_datadir}/javadoc/%{name}
