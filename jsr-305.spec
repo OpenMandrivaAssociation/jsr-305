@@ -1,6 +1,6 @@
 Name:           jsr-305
 Version:        3.0.2
-Release:        2
+Release:        3
 Summary:        Correctness annotations for Java code
 # The majority of code is BSD-licensed, but some Java sources
 # are licensed under CC-BY license, see: $ grep -r Creative .
