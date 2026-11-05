@@ -13,6 +13,9 @@ BuildRequires:	jdk-current
 BuildRequires:	python
 BuildRequires:	javapackages-local
 BuildArch:      noarch
+# javapackages-tools 6.5.1 no longer ships the maven depmap install macro.
+Provides:	mvn(com.google.code.findbugs:jsr305) = %{version}
+Provides:	sysjar(com.google.code.findbugs:jsr305) = %{version}
 
 %package javadoc
 Summary:        Javadoc documentation for %{name}
@@ -55,12 +58,35 @@ cp javax.annotation-%{version}.jar %{buildroot}%{_javadir}/modules
 ln -s modules/javax.annotation-%{version}.jar %{buildroot}%{_javadir}/
 ln -s modules/javax.annotation-%{version}.jar %{buildroot}%{_javadir}/javax.annotation.jar
 cp *.pom %{buildroot}%{_mavenpomdir}/
-%add_maven_depmap jsr305-%{version}.pom javax.annotation-%{version}.jar
+mkdir -p %{buildroot}%{_datadir}/sysjar/index/com.google.code.findbugs
+python - %{version} <<'PY'
+import json
+import sys
+from pathlib import Path
+version = sys.argv[1]
+record = {
+    "aliases": [],
+    "artifactId": "jsr305",
+    "classifier": "",
+    "dependencies": [],
+    "extension": "jar",
+    "groupId": "com.google.code.findbugs",
+    "jar": "/usr/share/java/modules/javax.annotation-" + version + ".jar",
+    "pom": "/usr/share/maven-poms/jsr305-" + version + ".pom",
+    "sysjar": 1,
+    "version": version,
+}
+Path("jsr305.sysjar").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
+install -m 644 jsr305.sysjar %{buildroot}%{_datadir}/sysjar/index/com.google.code.findbugs/jsr305.sysjar
 cp -a docs %{buildroot}%{_javadocdir}/%{name}
 
-%files -f .mfiles
+%files
 %{_javadir}/*.jar
 %{_javadir}/modules/javax.annotation-%{version}.jar
+%{_mavenpomdir}/jsr305-%{version}.pom
+%dir %{_datadir}/sysjar/index/com.google.code.findbugs
+%{_datadir}/sysjar/index/com.google.code.findbugs/jsr305.sysjar
 
 %files javadoc
 %{_datadir}/javadoc/%{name}
