@@ -2,13 +2,15 @@ Name:           jsr-305
 Version:        3.0.2
 Release:        3
 Summary:        Correctness annotations for Java code
+Group:          Development/Java
 # The majority of code is BSD-licensed, but some Java sources
 # are licensed under CC-BY license, see: $ grep -r Creative .
 License:        BSD and CC-BY
 URL:            https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305
 Source0:        https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/%{version}/jsr305-%{version}-sources.jar
-Source1:        https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/%{version}/jsr305-%{version}.pom
+Source1:        jsr305-%{version}.pom
 BuildRequires:	jdk-current
+BuildRequires:	python
 BuildRequires:	javapackages-local
 BuildArch:      noarch
 
@@ -24,7 +26,13 @@ Detection.
 This package contains the API documentation for %{name}.
 
 %prep
-%autosetup -p1 -c %{name}-%{version}
+%setup -q -c -T
+# The builders' rpmuncompress passes a sources jar to tar.
+python - %{SOURCE0} <<'PY'
+import sys
+import zipfile
+zipfile.ZipFile(sys.argv[1]).extractall(".")
+PY
 
 %build
 . %{_sysconfdir}/profile.d/90java.sh
