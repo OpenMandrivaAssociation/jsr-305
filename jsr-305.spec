@@ -1,17 +1,18 @@
 Name:           jsr-305
 Version:        3.0.2
-Release:        3
+Release:        4
 Summary:        Correctness annotations for Java code
 Group:          Development/Java
 # The majority of code is BSD-licensed, but some Java sources
 # are licensed under CC-BY license, see: $ grep -r Creative .
 License:        BSD and CC-BY
 URL:            https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305
-Source0:        https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/%{version}/jsr305-%{version}-sources.jar
+# Unpacked from the 3.0.2 sources jar. No class files.
+Source0:        jsr305-%{version}-sources.tar.gz
 Source1:        jsr305-%{version}.pom
 BuildRequires:	jdk-current
 BuildRequires:	python
-BuildRequires:	javapackages-local
+BuildRequires:	java-current-devel
 BuildArch:      noarch
 # javapackages-tools 6.5.1 no longer ships the maven depmap install macro.
 Provides:	mvn(com.google.code.findbugs:jsr305) = %{version}
@@ -29,28 +30,47 @@ Detection.
 This package contains the API documentation for %{name}.
 
 %prep
-%setup -q -c -T
-# The builders' rpmuncompress passes a sources jar to tar.
-python - %{SOURCE0} <<'PY'
-import sys
-import zipfile
-zipfile.ZipFile(sys.argv[1]).extractall(".")
-PY
+%autosetup -n jsr305-%{version}
 
 %build
 . %{_sysconfdir}/profile.d/90java.sh
 export PATH=$JAVA_HOME/bin:$PATH
 
-echo 'module javax.annotation {' >module-info.java
-find . -name "*.java" |xargs grep ^package |sed -e 's,^.*package ,,;s,\;.*,,' |sort |uniq |while read e; do
-	echo "	exports $e;" >>module-info.java
-done
-echo '}' >>module-info.java
-find . -name "*.java" |xargs javac
-find . -name "*.class" -o -name "*.properties" |xargs jar cf javax.annotation-%{version}.jar
+# Class files stay at Java 8. A module-info compiled by the builder JDK
+# made the previous jar unreadable on JDK 25.
+find . -name '*.java' > sources.list
+test "$(wc -l < sources.list)" -eq 31
+mkdir -p classes
+javac --release 8 -encoding UTF-8 -Xlint:-options -d classes @sources.list
+jar cf javax.annotation-%{version}.jar -C classes .
 jar i javax.annotation-%{version}.jar
+javap -verbose -cp javax.annotation-%{version}.jar javax.annotation.Nullable | grep -F 'major version: 52'
 javadoc -d docs -sourcepath . javax.annotation
 cp %{S:1} .
+
+%check
+. %{_sysconfdir}/profile.d/90java.sh
+export PATH=$JAVA_HOME/bin:$PATH
+mkdir -p check
+cat > check/Smoke.java << 'EOF'
+import javax.annotation.Nullable;
+import java.lang.annotation.Retention;
+public class Smoke {
+	public static void main(String[] args) {
+		Retention retention = Nullable.class.getAnnotation(Retention.class);
+		if (retention == null) {
+			throw new RuntimeException("no retention");
+		}
+		System.out.println("jsr305_ok " + retention.value());
+	}
+}
+EOF
+JAR=%{buildroot}%{_javadir}/javax.annotation.jar
+test -f "$JAR"
+javac --release 8 -encoding UTF-8 -Xlint:-options -cp "$JAR" -d check check/Smoke.java
+java -cp "check:$JAR" Smoke > check/out.txt
+cat check/out.txt
+grep -F -q 'jsr305_ok RUNTIME' check/out.txt
 
 %install
 mkdir -p %{buildroot}%{_javadir}/modules %{buildroot}%{_mavenpomdir} %{buildroot}%{_javadocdir}

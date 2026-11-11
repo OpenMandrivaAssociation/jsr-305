@@ -1,2 +1,4 @@
 sources:
+  jsr305-3.0.2-sources.tar.gz: 10e8855269f7257601776cb6629aa84abb294a1f
+removed_sources:
   jsr305-3.0.2-sources.jar: b19b5927c2c25b6c70f093767041e641ae0b1b35
