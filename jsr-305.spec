@@ -13,6 +13,9 @@ Source1:        jsr305-%{version}.pom
 BuildRequires:	jdk-current
 BuildRequires:	python
 BuildRequires:	java-current-devel
+# %{_javadir} and %{_mavenpomdir} come from this package. Without it the
+# file list is rejected as "File must begin with /".
+BuildRequires:	javapackages-filesystem
 BuildArch:      noarch
 # javapackages-tools 6.5.1 no longer ships the maven depmap install macro.
 Provides:	mvn(com.google.code.findbugs:jsr305) = %{version}
